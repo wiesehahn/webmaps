@@ -65,17 +65,20 @@
     <script>
       const beforeMap = new maplibregl.Map({
         container: "before",
-        style:
-        "style-color.json",
-        center: [9.8, 52.4],
+        style: "style-color.json",
+        center: [9.992971, 53.546750],
+        pitch: 50, 
         zoom: 13,
+        attributionControl: false,
       });
+      beforeMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
 
       const afterMap = new maplibregl.Map({
         container: "after",
         style:
           "https://api.maptiler.com/maps/streets/style.json?key=pEpj9rTYMBCnAsANJxJC",
-        center: [9.8, 52.4],
+        center: [9.992971, 53.546750],
+        pitch: 50, 
         zoom: 13,
       });
 
