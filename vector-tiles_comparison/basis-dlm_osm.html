@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Swipe between maps</title>
+    <title>Basis-DLM | OSM</title>
     <meta
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
@@ -65,9 +65,9 @@
     <script>
       const beforeMap = new maplibregl.Map({
         container: "before",
-        style: 'https://basisvisualisierung.niedersachsen.de/services/basiskarte_ni/styles/vt-style-color.json',
-        center: [9.7, 52.4],
-        pitch: 50, 
+        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/vector-tiles_comparison/style_basisdlm_advsmart.json',
+        center: [10, 51.5],
+        pitch: 0, 
         zoom: 13,
         attributionControl: false,
       });
@@ -75,10 +75,9 @@
 
       const afterMap = new maplibregl.Map({
         container: "after",
-        style:
-          "https://api.maptiler.com/maps/streets/style.json?key=pEpj9rTYMBCnAsANJxJC",
-        center: [9.7, 52.4],
-        pitch: 50, 
+        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/vector-tiles_comparison/style_osm_maptiler.json',
+        center: [10, 51.5],
+        pitch: 0, 
         zoom: 13,
       });
 
