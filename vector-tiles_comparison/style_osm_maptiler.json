@@ -182,8 +182,8 @@
       "source-layer": "landcover",
       "layout": { "visibility": "visible" },
       "paint": {
-        "fill-color": "hsla(98, 61%, 72%, 0.7)",
-        "fill-opacity": 0.4,
+        "fill-color": "hsla(0, 100%, 50%, 1)",
+        "fill-opacity": 0.8,
         "fill-antialias": false
       },
       "metadata": {},
