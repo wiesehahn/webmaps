@@ -68,7 +68,7 @@
         style: 'https://api.maptiler.com/maps/hybrid/style.json?key=pEpj9rTYMBCnAsANJxJC',
         center: [11.85,46.79],
         pitch: 70,
-        maxPitch: 85,
+        maxPitch: 75,
         zoom: 10,
         attributionControl: false,
       });
@@ -80,7 +80,8 @@
             });
             beforeMap.setTerrain({
                 source: "terrain",
-                exaggeration: 3 });
+                exaggeration: 2
+               });
         });
 
       beforeMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
@@ -102,7 +103,7 @@
               'maxzoom': 14
             });
             // add the DEM source as a terrain layer with exaggerated height
-            afterMap.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 3 });
+            afterMap.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 2 });
         });
 
       // A selector or reference to HTML element
