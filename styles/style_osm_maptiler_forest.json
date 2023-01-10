@@ -103,7 +103,7 @@
       "source": "openmaptiles",
       "source-layer": "globallandcover",
       "paint": {
-        "fill-color": "#ffe66b",
+        "fill-color": "hsl(50, 100%, 71%)",
         "fill-opacity": {
           "base": 1,
           "stops": [
