@@ -62,10 +62,10 @@
     <script>
       const beforeMap = new maplibregl.Map({
         container: "before",
-        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/style_bm_web_col.json',
-        center: [10, 51.5],
+        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/style_bm_web_gry_forest.json',
+        center: [10.037223, 52.934556],
         pitch: 0, 
-        zoom: 13,
+        zoom: 17,
         attributionControl: false,
       });
       beforeMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
@@ -74,9 +74,9 @@
       const afterMap = new mapboxgl.Map({
         container: 'after', 
         style: 'mapbox://styles/mapbox/satellite-v9',
-        center: [10, 51.5],
+        center: [10.037223, 52.934556],
         pitch: 0, 
-        zoom: 13,
+        zoom: 17,
       });
 
       // A selector or reference to HTML element
