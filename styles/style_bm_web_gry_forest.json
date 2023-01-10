@@ -361,8 +361,8 @@
       "paint": {
         "fill-color": {
           "stops": [
-            [11,"#ffe66b"],
-            [22,"#ffe66b"]
+            [11,"#f4ba02"],
+            [22,"#f4ba02"]
           ]
         },
         "fill-opacity": {
