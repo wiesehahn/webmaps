@@ -30,9 +30,21 @@
     var map = new maplibregl.Map({
         container: 'map',
         style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
-        center: [10, 51],
-        zoom: 6,
+        center: [10.338639, 47.426993], 
+        zoom: 12,
+        maxPitch: 60
     });
+
+    map.on('load', () => {
+        map.addSource('terrain', {
+            'type': 'raster-dem',
+            'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
+            'encoding': 'mapbox',
+            'maxzoom': 14
+        });
+        map.setTerrain({source: 'terrain', exaggeration: 0.5});
+    });
+
 
 
     const options = { frequency: 60, referenceFrame: "device" };
