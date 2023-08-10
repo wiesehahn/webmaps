@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Load data from an external GeoJSON file</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <style>
+      #file {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+    <div id="map"></div>
+    <input
+      type="file"
+      id="file"
+      name="file"
+      accept="application/geo+json,application/vnd.geo+json,.geojson"
+    />
+    <script>
+      mapboxgl.accessToken =
+        "pk.eyJ1Ijoid2llc2VoYWhuIiwiYSI6ImNreWxvNHN1ejM3eW4ydm4wZmk5NTVpNnoifQ.1LUJzdqzbd0hmjW89Zvt2w";
+      const map = new mapboxgl.Map({
+        container: "map", // container ID
+        style: "mapbox://styles/mapbox/light-v10", //'mapbox://styles/mapbox/satellite-v9', // style URL
+        zoom: 7, // starting zoom
+        center: [6.701476641151022, 52.540614566787177], // starting center
+      });
+
+      map.on("load", () => {
+        // Add as source to the map
+        map.addSource("my_data", {
+          type: "geojson",
+          data: "/data/disturbancepoints.geojson",
+          
+          filter: ["==", ['get', 'label'], 2021],
+          cluster: true,
+          clusterMaxZoom: 12,
+          clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
+        });
+
+        map.addLayer({
+          id: "clusters",
+          type: "circle",
+          source: "my_data",
+          //filter: ["all", ["has", "point_count"], ["==", ['get', 'label'],  2019] ],
+          filter: ["has", "point_count"],
+          paint: {
+            "circle-color": [
+              "step",
+              ["get", "point_count"],
+              "#0d0887",
+              100,
+              "#7e03a8",
+              500,
+              "#cc4778",
+              5000,
+              "#f89540",
+              10000,
+              "#f0f921",
+            ],
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["get", "point_count"],
+              100,
+              10,
+              5000,
+              50,
+            ],
+          },
+        });
+
+        map.addLayer({
+          id: "cluster-count",
+          type: "symbol",
+          source: "my_data",
+          filter: ["has", "point_count"],
+          layout: {
+            "text-field": [
+              "to-string",
+              ["round", ["/", ["get", "point_count"], 10]],
+            ],
+            "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+            "text-size": 12,
+          },
+          paint: {
+            "text-color": "#ffffff",
+          },
+        });
+
+        map.addLayer({
+          id: "unclustered-point",
+          type: "circle",
+          source: "my_data",
+          filter: ["!", ["has", "point_count"]],
+          paint: {
+            "circle-color": "#040330",
+            "circle-radius": 3,
+            "circle-stroke-width": 1,
+            "circle-stroke-color": "#fff",
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>MapLibre | Mapbox (Terrain + Satellite) </title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="https://unpkg.com/maplibre-gl@2.2.0-pre.2/dist/maplibre-gl.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@2.2.0-pre.2/dist/maplibre-gl.css"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <style>
+      body {
+        overflow: hidden;
+      }
+
+      body * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css"
+      type="text/css"
+    />
+
+    <div id="comparison-container">
+      <div id="left" class="map"></div>
+      <div id="right" class="map"></div>
+    </div>
+
+    <script>
+      const leftMap = new maplibregl.Map({
+        container: "left",
+        style: "https://api.maptiler.com/maps/hybrid/style.json?key=pEpj9rTYMBCnAsANJxJC", //private token valid on https://wiesehahn.github.io
+        center: [11.85,46.79],
+        pitch: 65,
+        maxPitch: 65,
+        zoom: 10,
+        attributionControl: false,
+      });
+
+      function rotateLeft(timestamp) {
+        // clamp the rotation between 0 -360 degrees
+        // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+        rightMap.rotateTo((timestamp / 100) % 360, { duration: 0 });
+        // Request the next frame of the animation.
+        requestAnimationFrame(rotateLeft);
+      }
+
+      leftMap.on('load', () => {
+        leftMap.addSource("terrain", {
+              "type": "raster-dem",
+              "url": "https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=pEpj9rTYMBCnAsANJxJC", //private token valid on https://wiesehahn.github.io
+            });
+            leftMap.setTerrain({
+                source: "terrain",
+                exaggeration: 2 });
+
+        // Start the animation.
+        rotateLeft(0);
+        });
+
+      leftMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
+
+      mapboxgl.accessToken = 'pk.eyJ1Ijoid2llc2VoYWhuIiwiYSI6ImNreWxvNHN1ejM3eW4ydm4wZmk5NTVpNnoifQ.1LUJzdqzbd0hmjW89Zvt2w'; //private token valid on https://wiesehahn.github.io
+      const rightMap = new mapboxgl.Map({
+        container: 'right', 
+        style: 'mapbox://styles/mapbox/satellite-v9',
+        center: [11.85,46.79],
+        pitch: 65, 
+        zoom: 10,
+      });
+
+      function rotateRight(timestamp) {
+        // clamp the rotation between 0 -360 degrees
+        // Divide timestamp by 100 to slow rotation to ~10 degrees / sec
+        rightMap.rotateTo((timestamp / 100) % 360, { duration: 0 });
+        // Request the next frame of the animation.
+        requestAnimationFrame(rotateRight);
+      }
+
+
+      rightMap.on('load', () => {
+        rightMap.addSource('mapbox-dem', {
+              'type': 'raster-dem',
+              'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+              'tileSize': 512,
+              'maxzoom': 14
+            });
+            // add the DEM source as a terrain layer with exaggerated height
+            rightMap.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 2 });
+        
+        // Start the animation.
+        rotateRight(0);
+      });
+
+      // A selector or reference to HTML element
+      const container = "#comparison-container";
+
+      const map = new mapboxgl.Compare(leftMap, rightMap, container, {
+        // Set this to enable comparing two maps by mouse movement:
+        // mousemove: true
+      });
+    </script>
+  </body>
+</html>

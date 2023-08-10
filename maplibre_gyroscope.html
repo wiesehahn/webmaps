@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.css' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 20px;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+
+
+</head>
+
+<body>
+<div id="gyro">gyro</div>
+<div id="map"></div>
+<script src='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.js'></script>
+
+<script>
+    var map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
+        center: [10.338639, 47.426993], 
+        zoom: 12,
+        maxPitch: 60
+    });
+
+    map.on('load', () => {
+        map.addSource('terrain', {
+            'type': 'raster-dem',
+            'tiles': ['https://vtc-cdn.maptoolkit.net/terrainrgb/{z}/{x}/{y}.webp'],
+            'encoding': 'mapbox',
+            'maxzoom': 14
+        });
+        map.setTerrain({source: 'terrain', exaggeration: 0.5});
+    });
+
+
+
+    const options = { frequency: 60, referenceFrame: "device" };
+    const sensor = new AbsoluteOrientationSensor(options);
+
+    sensor.addEventListener("reading", () => {
+        let quaternion = sensor.quaternion;
+        document.getElementById('gyro').innerText = `${quaternion} `;
+        map.setPitch(quaternion[0] * 100);
+    });
+
+    sensor.addEventListener("error", (error) => {
+        if (event.error.name === "NotReadableError") {
+            window.alert("Sensor is not available.");
+        }
+    });
+
+    Promise.all([
+        navigator.permissions.query({ name: "accelerometer" }),
+        navigator.permissions.query({ name: "magnetometer" }),
+        navigator.permissions.query({ name: "gyroscope" }),
+    ]).then((results) => {
+        if (results.every((result) => result.state === "granted")) {
+            sensor.start();
+            // …
+        } else {
+            window.alert("No permissions to use AbsoluteOrientationSensor.");
+        }
+    });
+</script>
+</body>
+</html>
