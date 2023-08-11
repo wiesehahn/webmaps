@@ -56,7 +56,8 @@
         map.easeTo({
             pitch: quaternion[0] * 100,
             offset: [0, -100],
-            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+            animate:false,
+            essential: false // this animation is considered essential with respect to prefers-reduced-motion
         });
     });
 
