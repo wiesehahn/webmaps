@@ -53,12 +53,9 @@
     sensor.addEventListener("reading", () => {
         let quaternion = sensor.quaternion;
         document.getElementById('gyro').innerText = `${quaternion} `;
-        map.easeTo({
-            pitch: quaternion[0] * 100,
-            offset: [0, -100],
-            animate:false,
-            essential: false // this animation is considered essential with respect to prefers-reduced-motion
-        });
+        
+        map.setPitch(quaternion[0] * 100);
+        map.panBy([0, quaternion[0] * 100]);
     });
 
     sensor.addEventListener("error", (error) => {
