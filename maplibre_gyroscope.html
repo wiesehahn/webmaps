@@ -55,7 +55,7 @@
         document.getElementById('gyro').innerText = `${quaternion} `;
         map.easeTo({
             pitch: quaternion[0] * 100,
-            offset: [0, quaternion[0] * 100],
+            offset: [0, -100],
             essential: true // this animation is considered essential with respect to prefers-reduced-motion
         });
     });
