@@ -1,11 +1,11 @@
 <!DOCTYPE html>
+<!-- This page renders basemap.de tiles with 3d terrain, fixes hillshade order, adds contour lines, uses gyroscope for pitch -->
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
-    <script src="https://unpkg.com/maplibre-contour@0.0.8/dist/index.min.js"></script>
+    <script src="https://unpkg.com/maplibre-contour@0.1.0/dist/index.min.js"></script>
     <link rel='stylesheet' href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
     <style>
         body {
@@ -66,7 +66,7 @@
                 "sources": {
                     "smarttiles_de": {
                         "type": "vector",
-                        "attribution": "&copy; 2023 basemap.de / BKG | Datenquellen: © GeoBasis-DE",
+                        "attribution": "&copy; 2025 basemap.de / BKG | Datenquellen: © GeoBasis-DE",
                         "url": "https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/tiles/v1/bm_web_de_3857/bm_web_de_3857.json"
                     },
                     "dem": {
@@ -32527,6 +32527,7 @@
                             // zoom: [minor, major]
                             11: [200, 1000],
                             12: [100, 500],
+                            13: [100, 500],
                             14: [50, 200],
                             15: [20, 100],
                         },
@@ -32546,10 +32547,10 @@
                 source: "contour-source",
                 "source-layer": "contours",
                 paint: {
-                    "line-color": "rgba(0,0,0, 50%)",
+                    "line-color": "rgba(0,0,0, 20%)",
                     // level = highest index in thresholds array the elevation is a multiple of
-                    "line-width": ["match", ["get", "level"], 1, 0.8, 0.5],
-                    "line-dasharray": [2, 2],
+                "line-width": ["match", ["get", "level"], 1, 1, 0.5],
+                    //"line-dasharray": [2, 2],
                 },
 
                 layout: {
@@ -32582,10 +32583,10 @@
         });
 
         var scale = new maplibregl.ScaleControl({
-      maxWidth: 80,
-      unit: "metric",
-    });
-    map.addControl(scale);
+            maxWidth: 80,
+            unit: "metric",
+        });
+        map.addControl(scale);
 
         const options = { frequency: 60, referenceFrame: "device" };
         const sensor = new AbsoluteOrientationSensor(options);
