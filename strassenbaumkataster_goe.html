@@ -1,0 +1,151 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title> Straßenbaumkataster HH </title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <link rel='stylesheet' href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        var map = (window.map = new maplibregl.Map({
+            container: 'map',
+            zoom: 11,
+            center: [9.8947771063083305,
+                    51.555827654020923],
+            pitch: 35,
+            hash: true,
+            style: 'https://basemap.de/data/produkte/web_vektor/styles/bm_web_drk.json',
+            maxZoom: 20,
+            maxPitch: 60
+        }));
+
+
+        map.on('load', () => {
+            map.addSource('pois-src', {
+                type: 'geojson',
+                // from 
+                // https://geoportal.goettingen.de/arcgis/rest/services/Gruenflaechenamt/Stadtgruen_Internet/MapServer/0/query
+                data: 'https://raw.githubusercontent.com/wiesehahn/webmaps/main/data/baumkataster_goe.geojson'
+            });
+
+            map.addLayer({
+                'id': 'pois',
+                'type': 'circle',
+                'source': 'pois-src',
+                'paint': {
+
+
+                    'circle-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'StammDN'], // Use the "size" attribute from GeoJSON
+                        10, 3, // Define a size mapping (attribute value to icon size)
+                        100, 10.0, // You can add more breakpoints as needed
+                    ],
+                    'circle-stroke-width': 0.5,
+                    'circle-color': [
+                        'match',
+                        ['get', 'gattung_latein'],
+                        'Acer',
+                        '#fbb03b',
+                        'Alnus',
+                        '#fbb03b',
+                        'Aesculus',
+                        '#fbb03b',
+                        'Betula',
+                        '#fbb03b',
+                        'Carpinus',
+                        '#fbb03b',
+                        'Corylus',
+                        '#fbb03b',
+                        'Eleagnus',
+                        '#fbb03b',
+                        'Fagus',
+                        '#fbb03b',
+                        'Fraxinus',
+                        '#e55e5e',
+                        'Malus',
+                        '#fbb03b',
+                        'Picea',
+                        '#fbb03b',
+                        'Platanus',
+                        '#fbb03b',
+                        'Populus',
+                        '#fbb03b',
+                        'Prunus',
+                        '#fbb03b',
+                        'Quercus',
+                        '#223b53',
+                        'Robinia',
+                        '#fbb03b',
+                        'Salix',
+                        '#fbb03b',
+                        'Sambucus',
+                        '#fbb03b',
+                        'Sorbus',
+                        '#fbb03b',
+                        'Tilia',
+                        '#3bb2d0',
+                        'Ulmus',
+                        '#fbb03b',
+                        /* other */
+                        '#ccc'
+                    ],
+                    'circle-stroke-color': 'white'
+                }
+            });
+        });
+
+
+        // Create a popup, but don't add it to the map yet.
+        const popup = new maplibregl.Popup({
+            closeButton: false,
+            closeOnClick: false
+        });
+
+        map.on('mouseenter', 'pois', (e) => {
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+
+            // Copy coordinates array.
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.Baumart_dt;
+
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            popup.setLngLat(coordinates).setHTML(description).addTo(map);
+        });
+
+        map.on('mouseleave', 'pois', () => {
+            map.getCanvas().style.cursor = '';
+            popup.remove();
+        });
+
+    </script>
+</body>
+
+</html>

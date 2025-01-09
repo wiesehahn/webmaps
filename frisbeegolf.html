@@ -1,0 +1,110 @@
+<!-- Page generated to test rendering data from external gist (frisbeegolf locations) -->
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title> Frisbeegolf Stages </title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+  <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    var map = (window.map = new maplibregl.Map({
+      container: 'map',
+      zoom: 11,
+      center: [9.93, 51.53],
+      pitch: 35,
+      hash: true,
+      style: 'https://web3d.basemap.de/maplibre/bm_web_col.json',
+      maxZoom: 18,
+      maxPitch: 60
+    }));
+
+    map.addControl(
+      new maplibregl.NavigationControl({
+        visualizePitch: true,
+        showZoom: true,
+        showCompass: true
+      })
+    );
+
+    map.addControl(
+      new maplibregl.TerrainControl({
+        source: 'terrainSource',
+        exaggeration: 1
+      })
+    );
+
+
+    map.on('load', () => {
+      map.addSource('frisbeegolf', {
+        type: 'geojson',
+        data: 'https://gist.githubusercontent.com/wiesehahn/e81875e1992ce6e1e595457aeb712b8c/raw/6889db2c9f6382a3cf759a523adf6ebd1dae1229/frisbeegolf.geojson'
+      });
+
+      map.addLayer({
+        'id': 'frisbeegolf-layer',
+        'type': 'circle',
+        'source': 'frisbeegolf',
+        'paint': {
+          'circle-radius': 4,
+          'circle-stroke-width': 2,
+          'circle-color': 'red',
+          'circle-stroke-color': 'white'
+        }
+      });
+
+
+      // Create a popup, but don't add it to the map yet.
+      const popup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      map.on('mouseenter', 'frisbeegolf-layer', (e) => {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // Copy coordinates array.
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.date;
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        // Populate the popup and set its coordinates
+        // based on the feature found.
+        popup.setLngLat(coordinates).setHTML(description).addTo(map);
+      });
+
+      map.on('mouseleave', 'frisbeegolf-layer', () => {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+
+    });
+
+  </script>
+</body>
+
+</html>

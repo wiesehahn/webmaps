@@ -1,9 +1,11 @@
 <!DOCTYPE html>
+<!-- This page renders basemap.de tiles with 3d terrain and uses gyroscope to control pitch -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.css' />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <link rel='stylesheet' href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
     <style>
         body {
             margin: 0;
@@ -24,7 +26,6 @@
 <body>
 <div id="gyro">gyro</div>
 <div id="map"></div>
-<script src='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.js'></script>
 
 <script>
     var map = new maplibregl.Map({

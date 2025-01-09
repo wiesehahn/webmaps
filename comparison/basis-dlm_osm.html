@@ -1,90 +1,87 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Basis-DLM | OSM</title>
-    <meta
-      name="viewport"
-      content="initial-scale=1,maximum-scale=1,user-scalable=no"
-    />
-    <script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
-    <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet'/>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-      }
-    </style>
-  </head>
 
-  <body>
-    <style>
-      body {
-        overflow: hidden;
-      }
+<head>
+  <meta charset="utf-8" />
+  <title>Basis-DLM | OSM</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+  <link rel='stylesheet' href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-compare/dist/maplibre-gl-compare.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@maplibre/maplibre-gl-compare/dist/maplibre-gl-compare.css"
+    type="text/css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
-      body * {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
 
-      .map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-      }
-    </style>
+<body>
+  <style>
+    body {
+      overflow: hidden;
+    }
 
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
+    body * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
 
-    <link
-      rel="stylesheet"
-      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css"
-      type="text/css"
-    />
+    .map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
 
-    <div id="comparison-container">
-      <div id="before" class="map"></div>
-      <div id="after" class="map"></div>
-    </div>
 
-    <script>
-      const beforeMap = new maplibregl.Map({
-        container: "before",
-        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/style_bm_web_gry_forest.json',
-        center: [10, 51.5],
-        pitch: 0, 
-        zoom: 13,
-        attributionControl: false,
-      });
-      beforeMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
 
-      const afterMap = new maplibregl.Map({
-        container: "after",
-        style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/style_osm_maptiler_light_forest.json',
-        center: [10, 51.5],
-        pitch: 0, 
-        zoom: 13,
-      });
 
-      // A selector or reference to HTML element
-      const container = "#comparison-container";
+  <div id="comparison-container">
+    <div id="before" class="map"></div>
+    <div id="after" class="map"></div>
+  </div>
 
-      const map = new mapboxgl.Compare(beforeMap, afterMap, container, {
-        // Set this to enable comparing two maps by mouse movement:
-        // mousemove: true
-      });
-    </script>
-  </body>
+  <script>
+    const beforeMap = new maplibregl.Map({
+      container: "before",
+      style: 'https://raw.githubusercontent.com/wiesehahn/webmaps/refs/heads/main/styles/style_bm_web_gry_forest.json',
+      center: [10, 51.5],
+      pitch: 0,
+      zoom: 13,
+      attributionControl: false,
+    });
+    beforeMap.addControl(new maplibregl.AttributionControl(), "bottom-left");
+
+    const afterMap = new maplibregl.Map({
+      container: "after",
+      style: 'https://raw.githubusercontent.com/wiesehahn/webmaps/refs/heads/main/styles/style_openfreemap_light_forest.json',
+      center: [10, 51.5],
+      pitch: 0,
+      zoom: 13,
+    });
+
+    // A selector or reference to HTML element
+    const container = "#comparison-container";
+
+    const map = new maplibregl.Compare(beforeMap, afterMap, container, {
+      // Set this to enable comparing two maps by mouse movement:
+      // mousemove: true
+    });
+  </script>
+</body>
+
 </html>
