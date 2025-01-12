@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title> 3D Gelaende </title>
+    <meta property="og:description" content="Use MapLibre GL JS' built-in functions to visualize points as clusters." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            zoom: 6,
+            center: [9.5,
+                53],
+            pitch: 0,
+            style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
+            maxZoom: 16,
+            maxPitch: 0
+        });
+
+
+        map.on('load', () => {
+            map.addSource('disturbances', {
+                type: 'geojson',
+                data: 'https://raw.githubusercontent.com/wiesehahn/webmaps/main/data/disturbancepoints.geojson',
+                cluster: true,
+                clusterMaxZoom: 12,
+                clusterRadius: 50
+            });
+
+
+            map.addLayer({
+                id: 'clusters',
+                type: 'circle',
+                source: 'disturbances',
+                filter: ['has', 'point_count'],
+                paint: {
+                    "circle-color": "#7E99A3",
+                    "circle-opacity": 0.7,
+                    /*
+                    "circle-color": [
+                        "step",
+                        ["get", "point_count"],
+                        "#0d0887",
+                        100,
+                        "#7e03a8",
+                        500,
+                        "#cc4778",
+                        5000,
+                        "#f89540",
+                        10000,
+                        "#f0f921",
+                    ],
+                    */
+                    "circle-radius": [
+                        "interpolate",
+                        ["linear"],
+                        ["get", "point_count"],
+                        100,
+                        10,
+                        10000,
+                        50,
+                    ],
+                },
+            });
+
+            map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'disturbances',
+                filter: ['has', 'point_count'],
+                layout: {
+                    "text-field": '{point_count_abbreviated}',
+                    "text-font": ["Open Sans Bold"],
+                    "text-size": 14,
+                },
+                paint: {
+                    "text-color": "#ffffff"
+                }
+            });
+
+            map.addLayer({
+                id: 'unclustered-point',
+                type: 'circle',
+                source: 'disturbances',
+                filter: ['!', ['has', 'point_count']],
+                paint: {
+                    'circle-color': '#7E99A3',
+                    'circle-radius': 4,
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#fff',
+                    'circle-stroke-opacity': 0.5
+                }
+            });
+        });
+
+    </script>
+</body>
+
+</html>
