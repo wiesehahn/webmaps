@@ -12,5 +12,5 @@ Playing with webmapping libraries (MapLibre, Mapbox) to test capabilities and le
 - [Show and Hide Layers](https://wiesehahn.github.io/webmaps/maplibre_show-and-hide-layers.html)
 - [Göttingen City Trees (data from Github repo)](https://wiesehahn.github.io/webmaps/strassenbaumkataster_goe.html)
 - [BasisDLM vs. OSM (Compare)](https://wiesehahn.github.io/webmaps/comparison/basis-dlm_osm.html)
-- [Forest disturbances (Clusters)](https://wiesehahn.github.io/webmaps/maplibre_cluster.html)
+- [Forest disturbances (Clusters)](https://wiesehahn.github.io/webmaps/disturbances_cluster.html)
 - [Forest disturbances (toggle PMTiles)](https://wiesehahn.github.io/webmaps/maplibre_pmtiles.html)
