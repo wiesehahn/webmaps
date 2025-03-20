@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title> 3D Gelaende </title>
+    <title> Forest Disturbances (2019-2021) </title>
     <meta property="og:description" content="Use MapLibre GL JS' built-in functions to visualize points as clusters." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,17 +25,19 @@
 <body>
     <div id="map"></div>
     <script>
-        const map = new maplibregl.Map({
-            container: 'map',
-            zoom: 6,
-            center: [9.5,
-                53],
-            pitch: 0,
-            style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
-            maxZoom: 16,
-            maxPitch: 0
-        });
-
+      const map = new maplibregl.Map({
+      container: 'map',
+      zoom: 7,
+      center: [9, 53],
+      pitch: 0,
+      style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
+      maxZoom: 14,
+      maxPitch: 0,
+      maxBounds: [
+        [5, 51], // Southwest coordinates
+        [13, 54] // Northeast coordinates
+      ]
+    });
 
         map.on('load', () => {
             map.addSource('disturbances', {
