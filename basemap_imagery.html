@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>basemap.de - 3D</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css' />
+  <script src='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.js'></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #control {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1;
+      background: white;
+      padding: 4px 4px;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2e3236;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .layer-label {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map" class="map"></div>
+
+  <div id="control">
+    <label class="toggle-switch">
+      <input type="checkbox" id="toggle-wms" checked>
+      <span class="slider"></span>
+    </label>
+    <span class="layer-label" id="wms-label">Imagery</span>
+  </div>
+
+  <script>
+
+
+    var map = new maplibregl.Map({
+      container: 'map',
+      zoom: 12.5,
+      center: [9.94, 51.53],
+      pitch: 0,
+      maxZoom: 20,
+      maxPitch: 0,
+      style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
+      hash: true
+    });
+
+    map.on('load', () => {
+        map.addSource('wms-source-sentinel2', {
+            'type': 'raster',
+            'tiles': [
+                'https://sgx.geodatenzentrum.de/wms_sentinel2_de?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.3.0&request=GetMap&crs=EPSG:3857&dpiMode=7&styles=rgb&tilePixelRatio=0&transparent=true&width=256&height=256&contextualWMSLegend=0&layers=rgb_2018'
+            ],
+            'tileSize': 256
+        });
+
+        map.addSource('wms-source-ortho-ni', {
+            'type': 'raster',
+            'tiles': [
+                'https://opendata.lgln.niedersachsen.de/doorman/noauth/dop_wms?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.3.0&request=GetMap&crs=EPSG:3857&dpiMode=7&styles=default&tilePixelRatio=0&transparent=true&width=256&height=256&contextualWMSLegend=0&layers=ni_dop20'
+            ],
+            'tileSize': 256
+        });
+        
+        map.addLayer(
+            {
+                'id': 'wms-sentinel2',
+                'type': 'raster',
+                'source': 'wms-source-sentinel2',
+                'paint': {},
+                'maxzoom': 14
+            },
+            'Name_Landgemeinde_1000_10000'
+        );
+
+        map.addLayer(
+            {
+                'id': 'wms-ortho-ni',
+                'type': 'raster',
+                'source': 'wms-source-ortho-ni',
+                'paint': {},
+                'minzoom': 14
+            },
+            'Name_Landgemeinde_1000_10000'
+        );
+    
+        // Set up simplified layer toggle control
+        document.getElementById('toggle-wms').addEventListener('change', function(e) {
+            const visibility = e.target.checked ? 'visible' : 'none';
+            
+            // Toggle both layers with the same control
+            map.setLayoutProperty('wms-sentinel2', 'visibility', visibility);
+            map.setLayoutProperty('wms-ortho-ni', 'visibility', visibility);
+        });
+        
+    });
+
+    // disable map rotation using right click + drag
+    map.dragRotate.disable();
+
+    // disable map rotation using keyboard
+    map.keyboard.disable();
+
+    // disable map rotation using touch rotation gesture
+    map.touchZoomRotate.disableRotation();
+    
+    map.addControl(
+      new maplibregl.NavigationControl({
+        visualizePitch: false,
+        showZoom: true,
+        showCompass: false
+      })
+    );
+  </script>
+</body>
+
+</html>
