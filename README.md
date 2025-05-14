@@ -14,3 +14,4 @@ Playing with webmapping libraries (MapLibre, Mapbox) to test capabilities and le
 - [BasisDLM vs. OSM (Compare)](https://wiesehahn.github.io/webmaps/comparison/basis-dlm_osm.html)
 - [Forest disturbances (Clusters)](https://wiesehahn.github.io/webmaps/disturbances_cluster.html)
 - [Forest disturbances (toggle PMTiles)](https://wiesehahn.github.io/webmaps/maplibre_pmtiles.html)
+- [Satellite/Ortho imagery](https://wiesehahn.github.io/webmaps/basemap_imagery.html)
