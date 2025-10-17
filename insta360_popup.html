@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diversa Plots - 360° images</title>
+  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.0/index.min.css" rel="stylesheet" />
+  <style>
+    html,body,#map { height: 100%; margin: 0; padding: 0; }
+    #map { position: absolute; inset: 0; }
+    .marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,0,0,0.4);
+      border: 2px solid white;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .marker:hover { transform: scale(1.3); }
+
+    .popup-content {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      width: 800px;
+    }
+    .viewer-container {
+      width: 100%;
+      height: 500px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+    }
+    .popup-title {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+    }
+    .maplibregl-popup-content {
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.0/index.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import { Viewer } from '@photo-sphere-viewer/core';
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      zoom: 7,
+      center: [9, 53],
+      pitch: 0,
+      style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
+      maxZoom: 16,
+      maxPitch: 0,
+      maxBounds: [
+        [5, 50], // Southwest coordinates
+        [14, 55] // Northeast coordinates
+      ]
+    });
+
+     // disable map rotation using right click + drag
+     map.dragRotate.disable();
+
+// disable map rotation using keyboard
+map.keyboard.disable();
+
+// disable map rotation using touch rotation gesture
+map.touchZoomRotate.disableRotation();
+
+    const baseUrl = 'https://photo-sphere-viewer-data.netlify.app/assets/';
+    const sample360 = [
+      baseUrl + 'sphere.jpg',
+      'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg'
+    ];
+
+    // --- Load your GeoJSON ---
+    const geojson = {
+      "type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_31", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.717598753700118, 52.059287475954349 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_11", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.5427467421008, 52.082592857515003 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WZ_18", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.667988088693123, 52.046629554310954 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WG_31", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.810180706903365, 51.923085227997333 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_61", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.399859964909339, 51.723464349822216 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_35", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.566398202026994, 51.79458369029458 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_54", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.473601145546152, 51.887791596254068 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_45", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.523665102024234, 51.875488959486809 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_ND_10", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.953303250583396, 53.195892773763575 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_11", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 11.276907252893976, 53.067374163495714 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_14", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.881136844828902, 53.136965516525869 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NG_24", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.893842566410262, 53.281408450900081 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_17", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.237681811657509, 51.818338336332459 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WZ_61", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.415644557617973, 51.704147438153704 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_35", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.407561033616437, 51.653697659759175 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WG_22", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.660840871044055, 51.462645936614472 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_70", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.361313923269263, 53.10364006713997 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_12", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.571151232231223, 53.19217470968352 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NG_37", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.006542684707052, 51.512532434463324 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_22", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.33925208107747, 51.583379013762375 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_22", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.65000130160024, 52.132899448124732 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_44", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.746094398343672, 52.202762925405615 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_15", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 11.022862720437125, 52.262863288964517 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_20", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.902017089792995, 52.281339773442205 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NG_35", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.761048926247406, 52.281965440257245 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_71", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.763622492016705, 52.284764097871523 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_ND_14", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.223601979275488, 52.497099559343134 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_11", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.264885039703042, 51.915887974206775 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_30", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.218879058407973, 51.941550354642871 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_17", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.306505797485158, 51.9903608855276 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_23", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.45920048336659, 52.178224998895963 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_29", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.953087633670311, 53.172988181258461 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_ND_12", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.931927200298171, 53.199507282200187 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_18", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.084814084761584, 53.315214700630804 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_13", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.478065132302662, 53.321753617831128 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_17", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.943252123532838, 53.336147189711156 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_10", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.8484626289234, 53.404217484655831 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_28", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.481019331669563, 51.614076262726115 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_15", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.635279718729471, 51.62536432553113 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NN_23", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.497054186810162, 51.643492560680009 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_16", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.55779953223219, 51.654998524923897 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_40", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.527440050584053, 51.663410220253866 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_ND_16", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.850355989165543, 52.318238658773225 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_19", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.504733396231311, 52.494075078600559 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_44", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.67771024234554, 52.493172317817944 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_32", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.366641786822948, 52.011353161484095 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_27", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.254827583917729, 52.198334590066878 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_18", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.273357968778331, 52.206576507844098 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_24", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.583606445109492, 52.183721163802133 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_25", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.698748036537156, 52.191377801290997 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_27", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.508924146242954, 52.223548820871187 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NN_18", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.331526307194245, 52.837244691228705 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_19", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.533816371488102, 52.862499112959739 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WZ_84", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.267749261048973, 52.837972853354202 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_67", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.833149808998147, 51.753988291660605 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_82", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.565333062580686, 51.746692430680767 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_59", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.662558004438484, 51.535624633802868 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_27", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.633137242737092, 51.538033597313564 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_29", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.035107579167184, 51.578669975485269 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_16", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.443420918734898, 53.017391433946344 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_13", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.170987893521074, 52.97250494901467 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_15", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.863583881100354, 53.14509526745605 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_21", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.71355597995141, 52.37377018219788 ] } },
+{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_26", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.768708008429023, 51.425655146362274 ] } }
+]
+    };
+
+    map.on('load', () => {
+      geojson.features.forEach((feature, i) => {
+        const coords = feature.geometry.coordinates;
+        const props = feature.properties;
+        const color = props.plot_type === 'managed' ? 'dodgerblue' : 'mediumseagreen';
+
+        // Create colored marker
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.title = props.plot_id;
+        el.style.background = color;
+
+        const viewerId = `viewer-${i}`;
+        const img360 = sample360[i % sample360.length];
+
+        const popupHTML = `
+          <div class='popup-content'>
+            <h4 class='popup-title'>${props.plot_id} (${props.plot_type})</h4>
+            <div id='${viewerId}' class='viewer-container'></div>
+            <p style='margin: 6px 0 0 0; font-size: 12px; color: #666;'>Drag to look around</p>
+          </div>
+        `;
+
+        const popup = new maplibregl.Popup({
+  offset: 12,
+  maxWidth: '1000px', // Increased maxWidth to 500px
+  maxHeight: '1000px', // Added maxHeight property
+  closeButton: false // Removed the close button
+})
+          .setHTML(popupHTML)
+          .on('open', () => {
+            setTimeout(() => {
+              const container = document.getElementById(viewerId);
+              if (container && !container.viewer) {
+                try {
+                  container.viewer = new Viewer({
+                    container: container,
+                    panorama: img360,
+                    navbar: false,
+                    touchmoveTwoFingers: true,
+                    mousemove: true,
+                    mousewheel: false,
+                    defaultZoomLvl: 0
+                  });
+                } catch (error) {
+                  console.error('Error creating viewer:', error);
+                  container.innerHTML = '<div style="color: #fff; padding: 20px; text-align: center; font-size: 12px;">Error loading viewer</div>';
+                }
+              }
+            }, 100);
+          })
+          .on('close', () => {
+            const container = document.getElementById(viewerId);
+            if (container && container.viewer) {
+              container.viewer.destroy();
+              container.viewer = null;
+            }
+          });
+
+        new maplibregl.Marker(el)
+          .setLngLat(coords)
+          .setPopup(popup)
+          .addTo(map);
+      });
+    });
+  </script>
+</body>
+</html>
