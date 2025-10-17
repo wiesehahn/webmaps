@@ -15,4 +15,4 @@ Playing with webmapping libraries (MapLibre, Mapbox) to test capabilities and le
 - [Forest disturbances (Clusters)](https://wiesehahn.github.io/webmaps/disturbances_cluster.html)
 - [Forest disturbances (toggle PMTiles)](https://wiesehahn.github.io/webmaps/maplibre_pmtiles.html)
 - [Satellite/Ortho imagery](https://wiesehahn.github.io/webmaps/basemap_imagery.html)
-- [360° Popups](https://wiesehahn.github.io/webmaps/insta360-popup.html)
+- [360° Popups](https://wiesehahn.github.io/webmaps/insta360_popup.html)
