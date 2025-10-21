@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Diversa Plots - 360° images</title>
-  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.0/index.min.css" rel="stylesheet" />
   <style>
     html,body,#map { height: 100%; margin: 0; padding: 0; }
@@ -43,7 +43,7 @@
 <body>
   <div id="map"></div>
 
-  <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -57,16 +57,16 @@
 
     const map = new maplibregl.Map({
       container: 'map',
-      zoom: 7,
+      zoom: 6.5,
       center: [9, 53],
-      pitch: 0,
-      style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
+      //style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
+      style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/bm_web_gry_naturwald.json',
       maxZoom: 16,
       maxPitch: 0,
       maxBounds: [
-        [5, 50], // Southwest coordinates
-        [14, 55] // Northeast coordinates
-      ]
+  [2.0, 47.0], // Southwest with buffer
+  [18.5, 55.5] // Northeast with buffer
+]
     });
 
      // disable map rotation using right click + drag
@@ -155,70 +155,109 @@ map.touchZoomRotate.disableRotation();
 ]
     };
 
+
     map.on('load', () => {
-      geojson.features.forEach((feature, i) => {
-        const coords = feature.geometry.coordinates;
-        const props = feature.properties;
-        const color = props.plot_type === 'managed' ? 'dodgerblue' : 'mediumseagreen';
-
-        // Create colored marker
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.title = props.plot_id;
-        el.style.background = color;
-
-        const viewerId = `viewer-${i}`;
-        const img360 = sample360[i % sample360.length];
-
-        const popupHTML = `
-          <div class='popup-content'>
-            <h4 class='popup-title'>${props.plot_id} (${props.plot_type})</h4>
-            <div id='${viewerId}' class='viewer-container'></div>
-            <p style='margin: 6px 0 0 0; font-size: 12px; color: #666;'>Drag to look around</p>
-          </div>
-        `;
-
-        const popup = new maplibregl.Popup({
-  offset: 12,
-  maxWidth: '1000px', // Increased maxWidth to 500px
-  maxHeight: '1000px', // Added maxHeight property
-  closeButton: false // Removed the close button
-})
-          .setHTML(popupHTML)
-          .on('open', () => {
-            setTimeout(() => {
-              const container = document.getElementById(viewerId);
-              if (container && !container.viewer) {
-                try {
-                  container.viewer = new Viewer({
-                    container: container,
-                    panorama: img360,
-                    navbar: false,
-                    touchmoveTwoFingers: true,
-                    mousemove: true,
-                    mousewheel: false,
-                    defaultZoomLvl: 0
-                  });
-                } catch (error) {
-                  console.error('Error creating viewer:', error);
-                  container.innerHTML = '<div style="color: #fff; padding: 20px; text-align: center; font-size: 12px;">Error loading viewer</div>';
-                }
-              }
-            }, 100);
-          })
-          .on('close', () => {
-            const container = document.getElementById(viewerId);
-            if (container && container.viewer) {
-              container.viewer.destroy();
-              container.viewer = null;
-            }
-          });
-
-        new maplibregl.Marker(el)
-          .setLngLat(coords)
-          .setPopup(popup)
-          .addTo(map);
+      map.addSource('plots', {
+        type: 'geojson',
+        data: geojson
       });
+
+      map.addLayer({
+    'id': 'plots-layer',
+    'type': 'circle',
+    'source': 'plots',
+    'paint': {
+      'circle-radius': 6,
+      'circle-stroke-width': 2,
+      'circle-color': [
+        'case',
+        ['==', ['get', 'plot_type'], 'managed'], 'dodgerblue',
+        ['==', ['get', 'plot_type'], 'rewilding'], 'mediumseagreen',
+        'red'
+      ],
+      'circle-stroke-color': 'white'
+    }
+  });
+
+      // Create a popup, but don't add it to the map yet.
+      const popup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      map.on('mouseenter', 'plots-layer', (e) => {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // Copy coordinates array.
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.plot_id;
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        // Populate the popup and set its coordinates
+        // based on the feature found.
+        popup.setLngLat(coordinates).setHTML(description).addTo(map);
+      });
+
+      map.on('mouseleave', 'plots-layer', () => {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+    
+      map.on('click', 'plots-layer', (e) => {
+  const coordinates = e.features[0].geometry.coordinates.slice();
+  const properties = e.features[0].properties;
+  const plotType = properties.plot_type;
+  const plotId = properties.plot_id;
+
+  const typeColor = plotType === 'managed' ? 'dodgerblue' :
+                    plotType === 'rewilding' ? 'mediumseagreen' : 'red';
+
+  // Example: choose an image based on plot_id or plot_type
+  const imageUrl = sample360[0]; // or logic to choose dynamically
+
+  // Create popup HTML
+  const popupHtml = `
+    <div class="popup-content">
+      <h3 class="popup-title">
+        ${plotId} 
+        <span style="color: ${typeColor}; font-weight: bold;">(${plotType})</span>
+      </h3>
+      <div class="viewer-container" id="viewer-${plotId}"></div>
+    </div>
+  `;
+
+  // Show popup at feature coordinates
+  new maplibregl.Popup({ maxWidth: '850px' })
+    .setLngLat(coordinates)
+    .setHTML(popupHtml)
+    .addTo(map);
+
+  // Wait for popup to be added to DOM, then load the 360 viewer
+  setTimeout(() => {
+    const container = document.getElementById(`viewer-${plotId}`);
+    if (container) {
+      new Viewer({
+        container,
+        panorama: imageUrl,
+        navbar: [
+        
+        'fullscreen',
+    ],
+    fisheye: false,
+    
+      });
+    }
+  }, 200);
+});
+
+
     });
   </script>
 </body>
