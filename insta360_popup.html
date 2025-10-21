@@ -84,6 +84,8 @@ map.touchZoomRotate.disableRotation();
       'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg'
     ];
 
+    const birdSoundUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+
     // --- Load your GeoJSON ---
     const geojson = {
       "type": "FeatureCollection",
@@ -219,8 +221,8 @@ map.touchZoomRotate.disableRotation();
   const typeColor = plotType === 'managed' ? 'dodgerblue' :
                     plotType === 'rewilding' ? 'mediumseagreen' : 'red';
 
-  // Example: choose an image based on plot_id or plot_type
-  const imageUrl = sample360[0]; // or logic to choose dynamically
+  const imageUrl = sample360[0]; // choose your 360 image
+  const birdSoundUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
   // Create popup HTML
   const popupHtml = `
@@ -233,28 +235,37 @@ map.touchZoomRotate.disableRotation();
     </div>
   `;
 
-  // Show popup at feature coordinates
-  new maplibregl.Popup({ maxWidth: '850px' })
+  const popup = new maplibregl.Popup({ maxWidth: '850px' })
     .setLngLat(coordinates)
     .setHTML(popupHtml)
     .addTo(map);
 
-  // Wait for popup to be added to DOM, then load the 360 viewer
+  let audio;
+
   setTimeout(() => {
     const container = document.getElementById(`viewer-${plotId}`);
     if (container) {
-      new Viewer({
+      const viewer = new Viewer({
         container,
         panorama: imageUrl,
-        navbar: [
-        
-        'fullscreen',
-    ],
-    fisheye: false,
-    
+        navbar: ['fullscreen'],
+        fisheye: false
       });
+
+      // Play bird sound
+      audio = new Audio(birdSoundUrl);
+      audio.volume = 0.3;
+      audio.play().catch(err => console.log('Autoplay blocked:', err));
     }
   }, 200);
+
+  // Stop sound when popup closes
+  popup.on('close', () => {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  });
 });
 
 
