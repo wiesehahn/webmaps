@@ -21,6 +21,10 @@
       "type": "vector",
       "attribution": "&copy; 2025 basemap.de / BKG | Datenquellen: &copy; GeoBasis-DE",
       "url": "https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/tiles/v2/bm_web_de_3857/bm_web_de_3857.json"
+    },
+    "hillshadeSource": {
+      "type": "raster-dem",
+      "url": "https://tiles.mapterhorn.com/tilejson.json"
     }
   },
   "layers": [
@@ -7800,6 +7804,20 @@
       "paint": {
         "fill-color": "rgb(229,229,229)",
         "fill-opacity": 1
+      }
+    },
+    {
+      "id": "hills",
+      "type": "hillshade",
+      "source": "hillshadeSource",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "hillshade-method": "igor",
+                            "hillshade-exaggeration": 0.2,
+                            "hillshade-highlight-color": "rgb(255, 255, 228)",
+                            "hillshade-shadow-color": "rgb(114, 124, 131)"
       }
     },
     {
