@@ -1188,6 +1188,7 @@ map.touchZoomRotate.disableRotation();
     .addTo(map);
 
   let audio;
+  let fadeInterval;
 
   setTimeout(() => {
     const container = document.getElementById(`viewer-${plotId}`);
@@ -1200,18 +1201,55 @@ map.touchZoomRotate.disableRotation();
         fisheye: true
       });
 
-      // Play bird sound
-      audio = new Audio(birdSoundUrl);
-      audio.volume = 0.3;
+// Play bird sound with fade in
+audio = new Audio(birdSoundUrl);
+      audio.volume = 0;
       audio.play().catch(err => console.log('Autoplay blocked:', err));
+      
+      // Fade in over 3 seconds
+      const targetVolume = 0.3;
+      const fadeInDuration = 3000; // 3 seconds
+      const fadeInSteps = 60;
+      const fadeInIncrement = targetVolume / fadeInSteps;
+      const fadeInInterval = fadeInDuration / fadeInSteps;
+      
+      let currentStep = 0;
+      fadeInterval = setInterval(() => {
+        if (currentStep < fadeInSteps && audio) {
+          audio.volume = Math.min(fadeInIncrement * currentStep, targetVolume);
+          currentStep++;
+        } else {
+          clearInterval(fadeInterval);
+        }
+      }, fadeInInterval);
     }
   }, 200);
 
-  // Stop sound when popup closes
-  popup.on('close', () => {
+// Fade out and stop sound when popup closes
+popup.on('close', () => {
     if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
+      clearInterval(fadeInterval);
+      
+      // Fade out over 3 seconds
+      const fadeOutDuration = 3000;
+      const fadeOutSteps = 60;
+      const startVolume = audio.volume;
+      const fadeOutDecrement = startVolume / fadeOutSteps;
+      const fadeOutInterval = fadeOutDuration / fadeOutSteps;
+      
+      let currentStep = 0;
+      const fadeOut = setInterval(() => {
+        if (currentStep < fadeOutSteps && audio) {
+          audio.volume = Math.max(startVolume - (fadeOutDecrement * currentStep), 0);
+          currentStep++;
+        } else {
+          clearInterval(fadeOut);
+          if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        }
+      }, fadeOutInterval);
     }
   });
 });
