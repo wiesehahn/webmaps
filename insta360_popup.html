@@ -38,10 +38,76 @@
     .maplibregl-popup-content {
       padding: 12px;
     }
+
+    #control {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1;
+      background: white;
+      padding: 4px 4px;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2e3236;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .layer-label {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <div id="control">
+    <label class="toggle-switch">
+      <input type="checkbox" id="toggle-wms">
+      <span class="slider"></span>
+    </label>
+    <span class="layer-label" id="wms-label">Imagery</span>
+  </div>
 
   <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
   <script type="importmap">
@@ -60,13 +126,64 @@
       zoom: 6.5,
       center: [9, 53],
       //style: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json',
-      style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/bm_web_gry_naturwald.json',
+      //style: 'https://raw.githubusercontent.com/wiesehahn/maps/main/styles/bm_web_gry_naturwald.json',
+      style: 'styles/bm_web_gry_naturwald.json',
       maxZoom: 16,
       maxPitch: 0,
       maxBounds: [
-  [2.0, 47.0], // Southwest with buffer
-  [18.5, 55.5] // Northeast with buffer
-]
+        [2.0, 47.0], // Southwest with buffer
+        [18.5, 55.5] // Northeast with buffer
+        ]
+    });
+
+    map.on('load', () => {
+        map.addSource('wms-source-sentinel2', {
+            'type': 'raster',
+            'tiles': [
+                'https://sgx.geodatenzentrum.de/wms_sentinel2_de?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.3.0&request=GetMap&crs=EPSG:3857&dpiMode=7&styles=rgb&tilePixelRatio=0&transparent=true&width=256&height=256&contextualWMSLegend=0&layers=rgb_2018'
+            ],
+            'tileSize': 256
+        });
+
+        map.addSource('wms-source-ortho-ni', {
+            'type': 'raster',
+            'tiles': [
+                'https://opendata.lgln.niedersachsen.de/doorman/noauth/dop_wms?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.3.0&request=GetMap&crs=EPSG:3857&dpiMode=7&styles=default&tilePixelRatio=0&transparent=true&width=256&height=256&contextualWMSLegend=0&layers=ni_dop20'
+            ],
+            'tileSize': 256
+        });
+        
+        map.addLayer(
+            {
+                'id': 'wms-sentinel2',
+                'type': 'raster',
+                'source': 'wms-source-sentinel2',
+                'paint': {},
+                'maxzoom': 14,
+                'layout': { 'visibility': 'none' }
+            }
+        );
+
+        map.addLayer(
+            {
+                'id': 'wms-ortho-ni',
+                'type': 'raster',
+                'source': 'wms-source-ortho-ni',
+                'paint': {},
+                'minzoom': 14,
+                'layout': { 'visibility': 'none' }
+            }
+        );
+    
+        // Set up simplified layer toggle control
+        document.getElementById('toggle-wms').addEventListener('change', function(e) {
+            const visibility = e.target.checked ? 'visible' : 'none';
+            
+            // Toggle both layers with the same control
+            map.setLayoutProperty('wms-sentinel2', 'visibility', visibility);
+            map.setLayoutProperty('wms-ortho-ni', 'visibility', visibility);
+        });
+        
     });
 
      // disable map rotation using right click + drag
@@ -78,82 +195,908 @@ map.keyboard.disable();
 // disable map rotation using touch rotation gesture
 map.touchZoomRotate.disableRotation();
 
-    const baseUrl = 'https://photo-sphere-viewer-data.netlify.app/assets/';
-    const sample360 = [
-      baseUrl + 'sphere.jpg',
-      'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg'
-    ];
-
     const birdSoundUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
     // --- Load your GeoJSON ---
     const geojson = {
       "type": "FeatureCollection",
 "features": [
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_31", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.717598753700118, 52.059287475954349 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_11", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.5427467421008, 52.082592857515003 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WZ_18", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.667988088693123, 52.046629554310954 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WG_31", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.810180706903365, 51.923085227997333 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_61", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.399859964909339, 51.723464349822216 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_35", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.566398202026994, 51.79458369029458 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_54", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.473601145546152, 51.887791596254068 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_45", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.523665102024234, 51.875488959486809 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_ND_10", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.953303250583396, 53.195892773763575 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_11", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 11.276907252893976, 53.067374163495714 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_14", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.881136844828902, 53.136965516525869 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NG_24", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.893842566410262, 53.281408450900081 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_17", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.237681811657509, 51.818338336332459 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WZ_61", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.415644557617973, 51.704147438153704 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_35", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.407561033616437, 51.653697659759175 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WG_22", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.660840871044055, 51.462645936614472 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_70", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.361313923269263, 53.10364006713997 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_12", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.571151232231223, 53.19217470968352 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NG_37", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.006542684707052, 51.512532434463324 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_22", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.33925208107747, 51.583379013762375 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_22", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.65000130160024, 52.132899448124732 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NZ_44", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.746094398343672, 52.202762925405615 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_15", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 11.022862720437125, 52.262863288964517 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_20", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.902017089792995, 52.281339773442205 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NG_35", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.761048926247406, 52.281965440257245 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_71", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.763622492016705, 52.284764097871523 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_ND_14", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.223601979275488, 52.497099559343134 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_11", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.264885039703042, 51.915887974206775 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_30", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.218879058407973, 51.941550354642871 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_17", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.306505797485158, 51.9903608855276 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_23", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.45920048336659, 52.178224998895963 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_29", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.953087633670311, 53.172988181258461 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_ND_12", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.931927200298171, 53.199507282200187 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_18", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.084814084761584, 53.315214700630804 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_13", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.478065132302662, 53.321753617831128 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_17", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.943252123532838, 53.336147189711156 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_10", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.8484626289234, 53.404217484655831 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_28", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.481019331669563, 51.614076262726115 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_15", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.635279718729471, 51.62536432553113 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_NN_23", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.497054186810162, 51.643492560680009 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_16", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.55779953223219, 51.654998524923897 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_40", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.527440050584053, 51.663410220253866 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_ND_16", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.850355989165543, 52.318238658773225 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_19", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.504733396231311, 52.494075078600559 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_44", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.67771024234554, 52.493172317817944 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_32", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.366641786822948, 52.011353161484095 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_27", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.254827583917729, 52.198334590066878 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_ND_18", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.273357968778331, 52.206576507844098 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_24", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.583606445109492, 52.183721163802133 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_25", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.698748036537156, 52.191377801290997 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NN_27", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.508924146242954, 52.223548820871187 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NN_18", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.331526307194245, 52.837244691228705 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_NN_19", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 10.533816371488102, 52.862499112959739 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WZ_84", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.267749261048973, 52.837972853354202 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_NZ_67", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.833149808998147, 51.753988291660605 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WZ_82", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.565333062580686, 51.746692430680767 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_NZ_59", "plot_type": "rewilding" }, "geometry": { "type": "Point", "coordinates": [ 9.662558004438484, 51.535624633802868 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_27", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.633137242737092, 51.538033597313564 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi3", "plot_id": "NI_WD_29", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.035107579167184, 51.578669975485269 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi2", "plot_id": "NI_WD_16", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.443420918734898, 53.017391433946344 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_13", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.170987893521074, 52.97250494901467 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_15", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.863583881100354, 53.14509526745605 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi4", "plot_id": "NI_WD_21", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 10.71355597995141, 52.37377018219788 ] } },
-{ "type": "Feature", "properties": { "dwsi_strat": "dwsi1", "plot_id": "NI_WD_26", "plot_type": "managed" }, "geometry": { "type": "Point", "coordinates": [ 9.768708008429023, 51.425655146362274 ] } }
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-31",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-31.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/mtw-1762422831418-1603959231?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.717598753700118, 52.059287475954349]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NZ-11",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-11.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/clo-1762422831418-321043618?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.5427467421008, 52.082592857515003]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WZ-18",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-18.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/znv-1762422831418-1240287282?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.667988088693123, 52.046629554310954]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WG-31",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WG-31.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/fkq-1762422831418--1757544356?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.810180706903365, 51.923085227997333]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NZ-61",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-61.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/xjb-1762422831418-464189373?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.399859964909339, 51.723464349822216]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NN-35",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-35.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/hfm-1762422831418-943108464?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.566398202026994, 51.79458369029458]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NZ-54",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-54.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/rpb-1762422831418-438330785?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.473601145546152, 51.887791596254068]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WZ-45",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-45.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/deq-1762422831418-1323404172?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.523665102024234, 51.875488959486809]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-ND-10",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-10.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/muo-1762422831417-632998391?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.953303250583396, 53.195892773763575]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-ND-11",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-11.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/uiv-1762422831417-633921912?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [11.276907252893976, 53.067374163495714]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-14",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-14.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/rgu-1762422831418-1549471492?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.881136844828902, 53.136965516525869]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NG-24",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NG-24.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/yqo-1762422831417-1598785335?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.893842566410262, 53.281408450900081]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NZ-17",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-17.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/vmq-1762422831418-326584744?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.237681811657509, 51.818338336332459]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WZ-61",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-61.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/gvq-1762422831418-1376968390?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.415644557617973, 51.704147438153704]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WZ-35",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-35.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/nqv-1762422831418-1294775021?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.407561033616437, 51.653697659759175]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WG-22",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WG-22.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/zoa-1762422831418--1785249986?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.660840871044055, 51.462645936614472]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NZ-70",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-70.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/bid-1762422831418-491895003?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.361313923269263, 53.10364006713997]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WD-12",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-12.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ocr-1762422831418-1547624450?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.571151232231223, 53.19217470968352]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NG-37",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NG-37.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/uhq-1762422831417-1630185049?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.006542684707052, 51.512532434463324]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NN-22",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-22.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qqo-1762422831418-911708750?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.33925208107747, 51.583379013762375]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WD-22",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-22.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/jfv-1762422831418-1576253601?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.65000130160024, 52.132899448124732]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NZ-44",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-44.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/bec-1762422831418-409701634?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.746094398343672, 52.202762925405615]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-ND-15",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-15.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ofc-1762422831417-637615996?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [11.022862720437125, 52.262863288964517]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-20",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-20.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/hxx-1762422831418-1574406559?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.902017089792995, 52.281339773442205]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NG-35",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NG-35.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/gxu-1762422831417-1628338007?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.761048926247406, 52.281965440257245]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NZ-71",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-71.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/nwt-1762422831418-492818524?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.763622492016705, 52.284764097871523]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-ND-14",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-14.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/exj-1762422831417-636692475?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.223601979275488, 52.497099559343134]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-11",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-11.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/gjq-1762422831418-1546700929?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.264885039703042, 51.915887974206775]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-30",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-30.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/kiq-1762422831418-1603035710?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.218879058407973, 51.941550354642871]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-ND-17",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-17.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/bvm-1762422831417-639463038?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.306505797485158, 51.9903608855276]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WD-23",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-23.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qup-1762422831418-1577177122?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.45920048336659, 52.178224998895963]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NZ-29",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-29.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qjo-1762422831418-357060937?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.953087633670311, 53.172988181258461]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-ND-12",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-12.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/rsd-1762422831417-634845433?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.931927200298171, 53.199507282200187]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WD-18",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-18.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/azj-1762422831418-1553165576?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.084814084761584, 53.315214700630804]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-ND-13",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-13.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/iqi-1762422831417-635768954?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.478065132302662, 53.321753617831128]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WD-17",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-17.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/fnp-1762422831418-1552242055?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.943252123532838, 53.336147189711156]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NZ-10",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-10.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qwu-1762422831418-320120097?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.8484626289234, 53.404217484655831]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-28",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-28.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/iee-1762422831418-1581794727?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.481019331669563, 51.614076262726115]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-NN-15",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-15.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/mgc-1762422831418-885850162?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.635279718729471, 51.62536432553113]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-NN-23",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-23.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/zyu-1762422831418-912632271?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.497054186810162, 51.643492560680009]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-NN-16",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-16.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/afr-1762422831418-886773683?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.55779953223219, 51.654998524923897]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-40",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-40.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/myh-1762422831418-1631664861?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.527440050584053, 51.663410220253866]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-ND-16",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-16.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/nji-1762422831417-638539517?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.850355989165543, 52.318238658773225]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-19",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-19.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/izj-1762422831418-1554089097?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.504733396231311, 52.494075078600559]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WZ-44",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-44.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/tdb-1762422831418-1322480651?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.67771024234554, 52.493172317817944]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-32",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-32.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/war-1762422831418-1604882752?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.366641786822948, 52.011353161484095]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NZ-27",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-27.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qmz-1762422831418-355213895?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.254827583917729, 52.198334590066878]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-ND-18",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-ND-18.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/eur-1762422831417-640386559?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.273357968778331, 52.206576507844098]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WD-24",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-24.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ysx-1762422831418-1578100643?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.583606445109492, 52.183721163802133]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-25",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-25.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ovk-1762422831418-1579024164?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.698748036537156, 52.191377801290997]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NN-27",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-27.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ewg-1762422831418-916326355?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.508924146242954, 52.223548820871187]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NN-18",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-18.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/eel-1762422831418-888620725?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.331526307194245, 52.837244691228705]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-NN-19",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NN-19.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/luq-1762422831418-889544246?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.533816371488102, 52.862499112959739]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WZ-84",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-84.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/zjb-1762422831418-1436997255?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.267749261048973, 52.837972853354202]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-NZ-67",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-67.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/pjo-1762422831418-469730499?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.833149808998147, 51.753988291660605]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WZ-82",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WZ-82.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/ncn-1762422831418-1435150213?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.565333062580686, 51.746692430680767]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-NZ-59",
+      "plot_type": "rewilding",
+      //"image_url": "images/NI-NZ-59.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/qxx-1762422831418-442948390?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.662558004438484, 51.535624633802868]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-27",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-27.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/opy-1762422831418-1580871206?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.633137242737092, 51.538033597313564]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "3",
+      "plot_id": "NI-WD-29",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-29.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/nzf-1762422831418-1582718248?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.035107579167184, 51.578669975485269]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "2",
+      "plot_id": "NI-WD-16",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-16.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/bpw-1762422831418-1551318534?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.443420918734898, 53.017391433946344]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-13",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-13.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/hru-1762422831418-1548547971?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.170987893521074, 52.97250494901467]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-15",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-15.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/guc-1762422831418-1550395013?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.863583881100354, 53.14509526745605]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "4",
+      "plot_id": "NI-WD-21",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-21.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/nig-1762422831418-1575330080?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [10.71355597995141, 52.37377018219788]
+    }
+  },
+  {
+    "type": "Feature",
+    "properties": {
+      "dwsi_strat": "1",
+      "plot_id": "NI-WD-26",
+      "plot_type": "managed",
+      //"image_url": "images/NI-WD-26.jpg"
+      "image_url": "https://www.nw-fva.de/DiVA/filecloud/share/db95c6aa68edc8732f97d4891ec06c43/mrk-1762422831418-1579947685?nodl=1"
+    },
+    "geometry": {
+      "type": "Point",
+      "coordinates": [9.768708008429023, 51.425655146362274]
+    }
+  }
 ]
     };
 
@@ -221,7 +1164,11 @@ map.touchZoomRotate.disableRotation();
   const typeColor = plotType === 'managed' ? 'dodgerblue' :
                     plotType === 'rewilding' ? 'mediumseagreen' : 'red';
 
-  const imageUrl = sample360[0]; // choose your 360 image
+
+  let imageUrl = properties.image_url;
+
+
+
   const birdSoundUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
   // Create popup HTML
@@ -248,8 +1195,9 @@ map.touchZoomRotate.disableRotation();
       const viewer = new Viewer({
         container,
         panorama: imageUrl,
-        navbar: ['fullscreen'],
-        fisheye: false
+        description: `Desease Water Stress Indicator - Stratum: ${properties.dwsi_strat}`,
+        navbar: ['fullscreen', 'description'],
+        fisheye: true
       });
 
       // Play bird sound
