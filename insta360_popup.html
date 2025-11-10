@@ -114,12 +114,14 @@
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
-        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.0/index.module.js"
+        "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.0/index.module.js",
+        "@photo-sphere-viewer/autorotate-plugin": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/autorotate-plugin@5.14.0/index.module.js"
       }
     }
   </script>
   <script type="module">
     import { Viewer } from '@photo-sphere-viewer/core';
+    import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
 
     const map = new maplibregl.Map({
       container: 'map',
@@ -1197,9 +1199,19 @@ map.touchZoomRotate.disableRotation();
         container,
         panorama: imageUrl,
         description: `Desease Water Stress Indicator - Stratum: ${properties.dwsi_strat}`,
-        navbar: ['fullscreen', 'description'],
-        fisheye: true
+        navbar: ['autorotate', 'fullscreen', 'description'],
+        fisheye: true,
+        plugins: [
+          AutorotatePlugin.withConfig({
+            autostartDelay: 1000,
+            autorotateSpeed: '2rpm',
+            autostartOnIdle: false
+          })
+        ]
       });
+      
+      const autorotate = viewer.getPlugin(AutorotatePlugin);
+      autorotate.start();
 
 // Play bird sound with fade in
 audio = new Audio(birdSoundUrl);
